@@ -54,6 +54,7 @@ export class MemStorage implements IStorage {
       ...insertChild,
       id,
       dailyId: this.dailyIdCounter++,
+      parentPhone2: insertChild.parentPhone2 || null,
       status: "active",
       registeredAt: new Date(),
     };
