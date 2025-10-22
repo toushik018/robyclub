@@ -1,5 +1,7 @@
 import type { Child, InsertChild, ActionLog, InsertActionLog } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { children, actionLogs, dailyCounter } from "@shared/schema";
+import { db } from "../db";
+import { eq, desc, sql } from "drizzle-orm";
 
 export interface IStorage {
   getChildren(): Promise<Child[]>;
@@ -10,81 +12,88 @@ export interface IStorage {
   getActionLogs(): Promise<ActionLog[]>;
 }
 
-export class MemStorage implements IStorage {
-  private children: Map<string, Child>;
-  private actionLogs: Map<string, ActionLog>;
-  private dailyIdCounter: number;
-  private lastResetDate: string;
-
-  constructor() {
-    this.children = new Map();
-    this.actionLogs = new Map();
-    this.dailyIdCounter = 1;
-    this.lastResetDate = this.getTodayDateString();
-  }
-
+export class DbStorage implements IStorage {
   private getTodayDateString(): string {
     return new Date().toISOString().split('T')[0];
   }
 
-  private checkAndResetDailyCounter() {
+  private async incrementDailyCounter(): Promise<number> {
     const today = this.getTodayDateString();
-    if (today !== this.lastResetDate) {
-      this.dailyIdCounter = 1;
-      this.lastResetDate = today;
-      this.children.clear();
-      this.actionLogs.clear();
-    }
+    
+    const result = await db
+      .insert(dailyCounter)
+      .values({
+        date: today,
+        counter: 1,
+      })
+      .onConflictDoUpdate({
+        target: dailyCounter.date,
+        set: { counter: sql`${dailyCounter.counter} + 1` },
+      })
+      .returning();
+
+    return result[0].counter;
   }
 
   async getChildren(): Promise<Child[]> {
-    this.checkAndResetDailyCounter();
-    return Array.from(this.children.values());
+    const allChildren = await db.select().from(children).orderBy(desc(children.registeredAt));
+    return allChildren;
   }
 
   async getChildById(id: string): Promise<Child | undefined> {
-    this.checkAndResetDailyCounter();
-    return this.children.get(id);
+    const result = await db
+      .select()
+      .from(children)
+      .where(eq(children.id, id))
+      .limit(1);
+    
+    return result[0];
   }
 
   async createChild(insertChild: InsertChild): Promise<Child> {
-    this.checkAndResetDailyCounter();
-    const id = randomUUID();
-    const child: Child = {
-      ...insertChild,
-      id,
-      dailyId: this.dailyIdCounter++,
-      parentPhone2: insertChild.parentPhone2 || null,
-      status: "active",
-      registeredAt: new Date(),
-    };
-    this.children.set(id, child);
-    return child;
+    const dailyId = await this.incrementDailyCounter();
+    
+    const result = await db
+      .insert(children)
+      .values({
+        name: insertChild.name,
+        parentPhone: insertChild.parentPhone,
+        parentPhone2: insertChild.parentPhone2 || null,
+        pickupTime: insertChild.pickupTime,
+        dailyId,
+        status: "active",
+      })
+      .returning();
+
+    return result[0];
   }
 
   async deleteChild(id: string): Promise<void> {
-    const child = this.children.get(id);
-    if (child) {
-      child.status = "picked_up";
-      this.children.set(id, child);
-    }
+    await db
+      .update(children)
+      .set({ status: "picked_up" })
+      .where(eq(children.id, id));
   }
 
   async createActionLog(insertLog: InsertActionLog): Promise<ActionLog> {
-    const id = randomUUID();
-    const log: ActionLog = {
-      ...insertLog,
-      id,
-      timestamp: new Date(),
-    };
-    this.actionLogs.set(id, log);
-    return log;
+    const result = await db
+      .insert(actionLogs)
+      .values({
+        childId: insertLog.childId,
+        childName: insertLog.childName,
+        actionType: insertLog.actionType,
+        parentPhone: insertLog.parentPhone,
+        message: insertLog.message,
+      })
+      .returning();
+
+    return result[0];
   }
 
   async getActionLogs(): Promise<ActionLog[]> {
-    this.checkAndResetDailyCounter();
-    return Array.from(this.actionLogs.values());
+    const logs = await db.select().from(actionLogs).orderBy(desc(actionLogs.timestamp));
+    return logs;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DbStorage();

@@ -24,6 +24,26 @@ export const actionLogs = pgTable("action_logs", {
   timestamp: timestamp("timestamp").notNull().defaultNow(),
 });
 
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: text("username").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const settings = pgTable("settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const dailyCounter = pgTable("daily_counter", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: text("date").notNull().unique(),
+  counter: integer("counter").notNull().default(1),
+});
+
 export const insertChildSchema = createInsertSchema(children).omit({
   id: true,
   dailyId: true,
@@ -41,7 +61,25 @@ export const insertActionLogSchema = createInsertSchema(actionLogs).omit({
   timestamp: true,
 });
 
+export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  passwordHash: z.string(),
+});
+
+export const insertSettingSchema = createInsertSchema(settings).omit({
+  id: true,
+  updatedAt: true,
+});
+
 export type InsertChild = z.infer<typeof insertChildSchema>;
 export type Child = typeof children.$inferSelect;
 export type InsertActionLog = z.infer<typeof insertActionLogSchema>;
 export type ActionLog = typeof actionLogs.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+export type InsertSetting = z.infer<typeof insertSettingSchema>;
+export type Setting = typeof settings.$inferSelect;
+export type DailyCounter = typeof dailyCounter.$inferSelect;
