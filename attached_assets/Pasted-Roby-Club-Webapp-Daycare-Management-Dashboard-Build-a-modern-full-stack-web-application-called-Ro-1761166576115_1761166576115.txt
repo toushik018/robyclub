@@ -1,0 +1,119 @@
+Roby Club Webapp (Daycare Management Dashboard)
+
+Build a modern full-stack web application called Roby Club Webapp, designed for the daycare teams at Robinson Clubs (Roby Club).
+
+The purpose of this webapp is to help daycare staff manage children throughout the day and notify parents via WhatsApp when it’s time for pickup or if any issue occurs.
+
+🎯 Main Goal
+
+Create a simple, efficient system for daycare staff to:
+
+Register children upon arrival
+
+Store parent contact info and pickup time
+
+Send WhatsApp messages to parents using preset options
+
+Remove children from the list once picked up
+
+🧩 Core Features
+🧒 1. Child Registration Form
+
+Fields:
+
+Child name
+
+Auto-generated number ID for the day
+
+Parent’s phone number(s)
+
+Preferred pickup time
+
+On submission:
+
+Save to database
+
+Add to the Active Children Dashboard
+
+📋 2. Active Children Dashboard (Admin Panel)
+
+A real-time dashboard view showing all children currently in daycare.
+Each card or row should display:
+
+Child’s name
+
+Number ID
+
+Pickup time
+
+Parent phone numbers
+
+Status (e.g., “In daycare”)
+
+Action buttons:
+
+🆘 Emergency
+
+🧒 Child wishes pickup
+
+⏰ Pickup time reached
+
+✅ Mark as Picked Up
+
+When a button is pressed:
+
+Trigger a WhatsApp message (through n8n webhook or placeholder)
+
+Optionally log the action
+
+When “Picked Up” is clicked:
+
+Remove the child from the active list (or move to “Archived for Today”)
+
+💬 3. WhatsApp Integration (via n8n)
+
+Each action button calls an API endpoint or webhook to send a WhatsApp message using n8n (can be mocked for now).
+
+Message templates:
+
+Emergency: “There’s an emergency. Please contact the daycare immediately.”
+
+Child wishes pickup: “Your child wishes to be picked up.”
+
+Pickup time reached: “It’s your scheduled pickup time.”
+
+🧱 Technical Requirements
+
+Frontend: Next.js (App Router), React, Tailwind CSS
+
+Backend: Node.js (Express or Next.js API routes)
+
+Database: MongoDB (Mongoose models)
+
+Integration: WhatsApp via n8n webhook (placeholder or simulated)
+
+Auth (optional): Basic admin login for staff
+
+Real-time (optional): Use Socket.IO or Next.js Server Actions for instant updates
+
+💅 Design Requirements
+
+The UI should look like a modern admin dashboard.
+
+Use a clean, trendy design style — similar to modern SaaS dashboards.
+
+Use Tailwind CSS with smooth spacing, rounded corners, and shadows.
+
+Soft and friendly color palette (light blues, white, pastel accents).
+
+Each section (child list, form, buttons) should be well-structured, visually clear, and responsive.
+
+The dashboard should have:
+
+A sidebar (optional) with navigation (e.g., “Dashboard”, “Archived”, “Settings”)
+
+A top bar showing date and user info
+
+Cards or a table layout for active children
+
+Simple hover animations and consistent UI spacing
