@@ -7,6 +7,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { AppSidebar } from "@/components/app-sidebar";
+import { SocketProvider } from "@/contexts/SocketContext";
 import Dashboard from "@/pages/dashboard";
 import Archived from "@/pages/archived";
 import Settings from "@/pages/settings";
@@ -39,33 +40,35 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
-        <TooltipProvider>
-          <SidebarProvider style={style as React.CSSProperties}>
-            <div className="flex h-screen w-full">
-              <AppSidebar />
-              <div className="flex flex-1 flex-col">
-                <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background px-8 shadow-sm">
-                  <div className="flex items-center gap-4">
-                    <SidebarTrigger data-testid="button-sidebar-toggle" />
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="h-4 w-4" />
-                      <span data-testid="text-current-date">
-                        Today: {todayDate}
-                      </span>
+        <SocketProvider>
+          <TooltipProvider>
+            <SidebarProvider style={style as React.CSSProperties}>
+              <div className="flex h-screen w-full">
+                <AppSidebar />
+                <div className="flex flex-1 flex-col">
+                  <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background px-8 shadow-sm">
+                    <div className="flex items-center gap-4">
+                      <SidebarTrigger data-testid="button-sidebar-toggle" />
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="h-4 w-4" />
+                        <span data-testid="text-current-date">
+                          Today: {todayDate}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <ThemeToggle />
-                </header>
-                <main className="flex-1 overflow-auto bg-background p-8">
-                  <div className="mx-auto max-w-7xl">
-                    <Router />
-                  </div>
-                </main>
+                    <ThemeToggle />
+                  </header>
+                  <main className="flex-1 overflow-auto bg-background p-8">
+                    <div className="mx-auto max-w-7xl">
+                      <Router />
+                    </div>
+                  </main>
+                </div>
               </div>
-            </div>
-          </SidebarProvider>
-          <Toaster />
-        </TooltipProvider>
+            </SidebarProvider>
+            <Toaster />
+          </TooltipProvider>
+        </SocketProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

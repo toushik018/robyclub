@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Child, InsertChild } from "@shared/schema";
@@ -7,16 +7,44 @@ import { ChildRegistrationForm } from "@/components/child-registration-form";
 import { StatsCard } from "@/components/stats-card";
 import { EmptyState } from "@/components/empty-state";
 import { useToast } from "@/hooks/use-toast";
+import { useSocket } from "@/contexts/SocketContext";
 import { Users, Clock, TrendingUp, UserPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
+  const { socket, isConnected } = useSocket();
 
   const { data: children, isLoading } = useQuery<Child[]>({
     queryKey: ["/api/children"],
   });
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("child:created", (child: Child) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/children"] });
+      toast({
+        title: "New child registered",
+        description: `${child.name} has been added to the active list.`,
+      });
+    });
+
+    socket.on("child:deleted", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/children"] });
+    });
+
+    socket.on("action:created", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/actions"] });
+    });
+
+    return () => {
+      socket.off("child:created");
+      socket.off("child:deleted");
+      socket.off("action:created");
+    };
+  }, [socket, toast]);
 
   const registerMutation = useMutation({
     mutationFn: (data: InsertChild) =>

@@ -1,15 +1,36 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
 import type { Child } from "@shared/schema";
 import { EmptyState } from "@/components/empty-state";
+import { useSocket } from "@/contexts/SocketContext";
 import { Archive, Phone, Clock, User } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Archived() {
+  const { socket } = useSocket();
   const { data: children, isLoading } = useQuery<Child[]>({
     queryKey: ["/api/children"],
   });
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on("child:deleted", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/children"] });
+    });
+
+    socket.on("child:created", () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/children"] });
+    });
+
+    return () => {
+      socket.off("child:deleted");
+      socket.off("child:created");
+    };
+  }, [socket]);
 
   const archivedChildren =
     children?.filter((c) => c.status === "picked_up") || [];

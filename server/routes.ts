@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertChildSchema, insertActionLogSchema } from "@shared/schema";
 import { z } from "zod";
+import { getIO } from "./socket";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/children", async (_req, res) => {
@@ -30,6 +31,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const validatedData = insertChildSchema.parse(req.body);
       const child = await storage.createChild(validatedData);
+      
+      getIO().emit("child:created", child);
+      
       res.status(201).json(child);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -46,6 +50,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Child not found" });
       }
       await storage.deleteChild(req.params.id);
+      
+      getIO().emit("child:deleted", { id: req.params.id });
+      
       res.status(204).send();
     } catch (error) {
       res.status(500).json({ error: "Failed to delete child" });
@@ -62,6 +69,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         validatedData.message,
         validatedData.childName
       );
+
+      getIO().emit("action:created", log);
 
       res.status(201).json(log);
     } catch (error) {
