@@ -7,6 +7,13 @@ Roby Club Webapp is a modern, full-stack daycare management dashboard designed f
 **Last Updated**: October 22, 2025
 
 ## Recent Changes
+- **October 23, 2025**: Enhanced settings and improved UI/UX
+  - Added editable message templates in settings for staff customization
+  - Moved user login indicator from header to sidebar footer
+  - Staff can now customize WhatsApp notification messages for Emergency, Child Wishes, and Pickup Time scenarios
+  - Templates stored in database with fallback to default messages
+  - Improved sidebar footer with user identification and logout button
+
 - **October 22, 2025**: Initial MVP implementation completed
   - Implemented complete data model with Children and ActionLogs schemas
   - Built all frontend components with soft blue/pastel design system
@@ -70,8 +77,13 @@ Four action types per child:
 
 #### 6. Settings Page
 - Theme toggle (light/dark mode)
-- Notification configuration info
-- Message template reference
+- n8n webhook configuration for WhatsApp integration
+- **Editable message templates** - Staff can customize notification messages:
+  - Emergency notifications
+  - Child wishes pickup messages
+  - Pickup time reminders
+- Real-time template saving with validation
+- Templates persist in database and apply immediately to new notifications
 
 ### Data Model
 
@@ -183,7 +195,7 @@ npm run dev
 
 ### Medium Priority
 5. **Action History**: Comprehensive logging view with filters and search
-6. **Custom Message Templates**: Allow staff to edit notification messages
+6. ~~**Custom Message Templates**: Allow staff to edit notification messages~~ ✅ **COMPLETED (Oct 23, 2025)**
 7. **Pickup Reminders**: Automatic notifications at scheduled pickup times
 8. **Multi-day Archive**: Search and filter historical records beyond current day
 9. **Export Reports**: Generate daily/weekly PDF reports of attendance
