@@ -11,6 +11,7 @@ import { SocketProvider } from "@/contexts/SocketContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import Dashboard from "@/pages/dashboard";
 import Archived from "@/pages/archived";
+import History from "@/pages/history";
 import Settings from "@/pages/settings";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
@@ -77,6 +78,7 @@ function AuthenticatedApp() {
                   <Switch>
                     <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
                     <Route path="/archived" component={() => <ProtectedRoute component={Archived} />} />
+                    <Route path="/history" component={() => <ProtectedRoute component={History} />} />
                     <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
                     <Route component={NotFound} />
                   </Switch>

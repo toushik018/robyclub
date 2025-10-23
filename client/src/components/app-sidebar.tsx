@@ -1,4 +1,4 @@
-import { Home, Archive, Settings, Users, LogOut, User } from "lucide-react";
+import { Home, Archive, History, Settings, Users, LogOut, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,12 @@ const menuItems = [
     url: "/archived",
     icon: Archive,
     testId: "link-archived",
+  },
+  {
+    title: "History",
+    url: "/history",
+    icon: History,
+    testId: "link-history",
   },
   {
     title: "Settings",
