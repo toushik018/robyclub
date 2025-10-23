@@ -1,5 +1,7 @@
-import { Home, Archive, Settings, Users } from "lucide-react";
+import { Home, Archive, Settings, Users, LogOut, User } from "lucide-react";
 import { Link, useLocation } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 import {
   Sidebar,
   SidebarContent,
@@ -36,6 +38,13 @@ const menuItems = [
 
 export function AppSidebar() {
   const [location] = useLocation();
+  const { user, logout } = useAuth();
+  const [, setLocation] = useLocation();
+
+  const handleLogout = async () => {
+    await logout();
+    setLocation("/login");
+  };
 
   return (
     <Sidebar>
@@ -80,14 +89,24 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-6">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-sm font-medium text-sidebar-accent-foreground">
-            RC
+            <User className="h-4 w-4" />
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-sidebar-foreground">
-              Robinson Club
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-sidebar-foreground truncate">
+              {user?.username || "Robinson Club"}
             </p>
             <p className="text-xs text-muted-foreground">Staff Portal</p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            data-testid="button-logout"
+            title="Logout"
+            className="flex-shrink-0"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
       </SidebarFooter>
     </Sidebar>

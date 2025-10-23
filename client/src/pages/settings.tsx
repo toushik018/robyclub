@@ -5,22 +5,43 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useToast } from "@/hooks/use-toast";
 import { Bell, Palette, Info, Save } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+const DEFAULT_TEMPLATES = {
+  message_emergency: "There's an emergency. Please contact the daycare immediately.",
+  message_child_wishes: "Your child wishes to be picked up.",
+  message_pickup_time: "It's your scheduled pickup time.",
+};
+
 export default function Settings() {
   const { toast } = useToast();
   const [webhookUrl, setWebhookUrl] = useState("");
+  const [emergencyMessage, setEmergencyMessage] = useState(DEFAULT_TEMPLATES.message_emergency);
+  const [childWishesMessage, setChildWishesMessage] = useState(DEFAULT_TEMPLATES.message_child_wishes);
+  const [pickupTimeMessage, setPickupTimeMessage] = useState(DEFAULT_TEMPLATES.message_pickup_time);
 
   const { data: settings, isLoading } = useQuery<Record<string, string>>({
     queryKey: ["/api/settings"],
   });
 
   useEffect(() => {
-    if (settings && settings.n8n_webhook_url) {
-      setWebhookUrl(settings.n8n_webhook_url);
+    if (settings) {
+      if (settings.n8n_webhook_url) {
+        setWebhookUrl(settings.n8n_webhook_url);
+      }
+      if (settings.message_emergency) {
+        setEmergencyMessage(settings.message_emergency);
+      }
+      if (settings.message_child_wishes) {
+        setChildWishesMessage(settings.message_child_wishes);
+      }
+      if (settings.message_pickup_time) {
+        setPickupTimeMessage(settings.message_pickup_time);
+      }
     }
   }, [settings]);
 
@@ -43,6 +64,30 @@ export default function Settings() {
     },
   });
 
+  const saveMessagesMutation = useMutation({
+    mutationFn: async () => {
+      await Promise.all([
+        apiRequest("PUT", "/api/settings/message_emergency", { value: emergencyMessage }),
+        apiRequest("PUT", "/api/settings/message_child_wishes", { value: childWishesMessage }),
+        apiRequest("PUT", "/api/settings/message_pickup_time", { value: pickupTimeMessage }),
+      ]);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      toast({
+        title: "Templates saved",
+        description: "Message templates have been updated successfully.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Failed to save",
+        description: "Could not update the message templates. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleSaveWebhook = () => {
     if (!webhookUrl.trim()) {
       toast({
@@ -53,6 +98,18 @@ export default function Settings() {
       return;
     }
     saveWebhookMutation.mutate(webhookUrl);
+  };
+
+  const handleSaveMessages = () => {
+    if (!emergencyMessage.trim() || !childWishesMessage.trim() || !pickupTimeMessage.trim()) {
+      toast({
+        title: "Invalid messages",
+        description: "All message templates must be filled in.",
+        variant: "destructive",
+      });
+      return;
+    }
+    saveMessagesMutation.mutate();
   };
 
   const isWebhookConfigured = settings?.n8n_webhook_url && settings.n8n_webhook_url.length > 0;
@@ -143,35 +200,84 @@ export default function Settings() {
               <CardTitle className="text-base">Message Templates</CardTitle>
             </div>
             <CardDescription>
-              Preset messages sent to parents for different scenarios
+              Customize messages sent to parents for different scenarios
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Badge variant="destructive" className="text-xs">
-                  Emergency
-                </Badge>
-                <span className="text-sm text-card-foreground">
-                  "There's an emergency. Please contact the daycare immediately."
-                </span>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="destructive" className="text-xs">
+                    Emergency
+                  </Badge>
+                  <Label htmlFor="message-emergency" className="text-sm font-medium">
+                    Emergency Message
+                  </Label>
+                </div>
+                <Textarea
+                  id="message-emergency"
+                  placeholder="Enter emergency message template"
+                  value={emergencyMessage}
+                  onChange={(e) => setEmergencyMessage(e.target.value)}
+                  disabled={isLoading}
+                  rows={2}
+                  data-testid="input-message-emergency"
+                  className="resize-none"
+                />
               </div>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-warning text-warning-foreground text-xs">
-                  Child Wishes Pickup
-                </Badge>
-                <span className="text-sm text-card-foreground">
-                  "Your child wishes to be picked up."
-                </span>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-warning text-warning-foreground text-xs">
+                    Child Wishes Pickup
+                  </Badge>
+                  <Label htmlFor="message-child-wishes" className="text-sm font-medium">
+                    Child Wishes Pickup Message
+                  </Label>
+                </div>
+                <Textarea
+                  id="message-child-wishes"
+                  placeholder="Enter child wishes pickup message template"
+                  value={childWishesMessage}
+                  onChange={(e) => setChildWishesMessage(e.target.value)}
+                  disabled={isLoading}
+                  rows={2}
+                  data-testid="input-message-child-wishes"
+                  className="resize-none"
+                />
               </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="default" className="text-xs">
-                  Pickup Time
-                </Badge>
-                <span className="text-sm text-card-foreground">
-                  "It's your scheduled pickup time."
-                </span>
+
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="default" className="text-xs">
+                    Pickup Time
+                  </Badge>
+                  <Label htmlFor="message-pickup-time" className="text-sm font-medium">
+                    Pickup Time Message
+                  </Label>
+                </div>
+                <Textarea
+                  id="message-pickup-time"
+                  placeholder="Enter pickup time message template"
+                  value={pickupTimeMessage}
+                  onChange={(e) => setPickupTimeMessage(e.target.value)}
+                  disabled={isLoading}
+                  rows={2}
+                  data-testid="input-message-pickup-time"
+                  className="resize-none"
+                />
               </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={handleSaveMessages}
+                disabled={saveMessagesMutation.isPending || isLoading}
+                data-testid="button-save-messages"
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {saveMessagesMutation.isPending ? "Saving..." : "Save Templates"}
+              </Button>
             </div>
           </CardContent>
         </Card>

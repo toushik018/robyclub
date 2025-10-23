@@ -15,9 +15,7 @@ import Settings from "@/pages/settings";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import NotFound from "@/pages/not-found";
-import { Calendar, LogOut, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Calendar } from "lucide-react";
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { user, isLoading } = useAuth();
@@ -42,14 +40,6 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 }
 
 function AuthenticatedApp() {
-  const { user, logout } = useAuth();
-  const [, setLocation] = useLocation();
-
-  const handleLogout = async () => {
-    await logout();
-    setLocation("/login");
-  };
-
   const style = {
     "--sidebar-width": "20rem",
     "--sidebar-width-icon": "4rem",
@@ -79,23 +69,6 @@ function AuthenticatedApp() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  {user && (
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="flex items-center gap-2">
-                        <User className="h-3 w-3" />
-                        <span>{user.username}</span>
-                      </Badge>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleLogout}
-                        data-testid="button-logout"
-                        title="Logout"
-                      >
-                        <LogOut className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
                   <ThemeToggle />
                 </div>
               </header>

@@ -11,6 +11,12 @@ import { useSocket } from "@/contexts/SocketContext";
 import { Users, Clock, TrendingUp, UserPlus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const DEFAULT_MESSAGES = {
+  emergency: "There's an emergency. Please contact the daycare immediately.",
+  child_wishes: "Your child wishes to be picked up.",
+  pickup_time: "It's your scheduled pickup time.",
+};
+
 export default function Dashboard() {
   const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
@@ -19,6 +25,16 @@ export default function Dashboard() {
   const { data: children, isLoading } = useQuery<Child[]>({
     queryKey: ["/api/children"],
   });
+
+  const { data: settings } = useQuery<Record<string, string>>({
+    queryKey: ["/api/settings"],
+  });
+
+  const messageTemplates = {
+    emergency: settings?.message_emergency || DEFAULT_MESSAGES.emergency,
+    child_wishes: settings?.message_child_wishes || DEFAULT_MESSAGES.child_wishes,
+    pickup_time: settings?.message_pickup_time || DEFAULT_MESSAGES.pickup_time,
+  };
 
   useEffect(() => {
     if (!socket) return;
@@ -210,21 +226,21 @@ export default function Dashboard() {
                     handleAction(
                       child,
                       "emergency",
-                      "There's an emergency. Please contact the daycare immediately."
+                      messageTemplates.emergency
                     )
                   }
                   onChildWishes={(child) =>
                     handleAction(
                       child,
                       "child_wishes",
-                      "Your child wishes to be picked up."
+                      messageTemplates.child_wishes
                     )
                   }
                   onPickupTime={(child) =>
                     handleAction(
                       child,
                       "pickup_time",
-                      "It's your scheduled pickup time."
+                      messageTemplates.pickup_time
                     )
                   }
                   onMarkPickedUp={(child) => pickupMutation.mutate(child.id)}
