@@ -1,5 +1,5 @@
-import type { Child, InsertChild, ActionLog, InsertActionLog } from "@shared/schema";
-import { children, actionLogs, dailyCounter } from "@shared/schema";
+import type { Child, InsertChild, ActionLog, InsertActionLog, User, InsertUser, Setting, InsertSetting } from "@shared/schema";
+import { children, actionLogs, dailyCounter, users, settings } from "@shared/schema";
 import { db } from "../db";
 import { eq, desc, sql } from "drizzle-orm";
 
@@ -10,6 +10,12 @@ export interface IStorage {
   deleteChild(id: string): Promise<void>;
   createActionLog(log: InsertActionLog): Promise<ActionLog>;
   getActionLogs(): Promise<ActionLog[]>;
+  getUserById(id: string): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  getSetting(key: string): Promise<Setting | undefined>;
+  setSetting(key: string, value: string): Promise<Setting>;
+  getAllSettings(): Promise<Setting[]>;
 }
 
 export class DbStorage implements IStorage {
@@ -93,6 +99,66 @@ export class DbStorage implements IStorage {
   async getActionLogs(): Promise<ActionLog[]> {
     const logs = await db.select().from(actionLogs).orderBy(desc(actionLogs.timestamp));
     return logs;
+  }
+
+  async getUserById(id: string): Promise<User | undefined> {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1);
+    
+    return result[0];
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username))
+      .limit(1);
+    
+    return result[0];
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const result = await db
+      .insert(users)
+      .values({
+        username: insertUser.username,
+        passwordHash: insertUser.passwordHash,
+      })
+      .returning();
+
+    return result[0];
+  }
+
+  async getSetting(key: string): Promise<Setting | undefined> {
+    const result = await db
+      .select()
+      .from(settings)
+      .where(eq(settings.key, key))
+      .limit(1);
+    
+    return result[0];
+  }
+
+  async setSetting(key: string, value: string): Promise<Setting> {
+    const result = await db
+      .insert(settings)
+      .values({ key, value })
+      .onConflictDoUpdate({
+        target: settings.key,
+        set: { value, updatedAt: sql`now()` },
+      })
+      .returning();
+
+    return result[0];
+  }
+
+  async getAllSettings(): Promise<Setting[]> {
+    const allSettings = await db.select().from(settings);
+    return allSettings;
   }
 }
 
